@@ -47,9 +47,10 @@ jobs:
       - name: Run check
         run: npm start
 
-      - name: Commit changes
+      - name: Commit and push changes
         if: success()
         run: |
+          git pull --rebase origin main
           git add .
           git commit -m "Update exhibition data" || exit 0
-          git push 
+          git push origin main 
