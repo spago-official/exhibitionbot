@@ -35,22 +35,48 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   const $ = cheerio.load(response.data);
   const exhibitions: Exhibition[] = [];
 
-  // HTMLの構造を確認
-  console.log('\nChecking HTML structure...');
-  const articleElements = $('article');
-  console.log('Found article elements:', articleElements.length);
+  // HTMLの構造を詳細に分析
+  console.log('\nAnalyzing HTML structure...');
+  
+  // メインコンテンツエリアを探す
+  const mainContent = $('main, #main, .main, .content');
+  console.log('Main content elements found:', mainContent.length);
+  
+  // 展示情報を含む可能性のある要素を探す
+  const possibleContainers = $('article, .article, .exhibition, .event, .item');
+  console.log('Possible exhibition containers found:', possibleContainers.length);
 
-  console.log('Parsing exhibitions...');
-  $('article').each((_: number, element: cheerio.Element) => {
+  // 各コンテナの構造を確認
+  possibleContainers.each((i, container) => {
+    console.log(`\nContainer ${i + 1}:`);
+    console.log('HTML:', $(container).html()?.substring(0, 200) + '...');
+    
+    // タイトル要素を探す
+    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name');
+    console.log('Title elements found:', titleElements.length);
+    titleElements.each((j, el) => {
+      console.log(`Title ${j + 1}:`, $(el).text().trim());
+    });
+
+    // 日付要素を探す
+    const dateElements = $(container).find('.date, .period, .schedule, time');
+    console.log('Date elements found:', dateElements.length);
+    dateElements.each((j, el) => {
+      console.log(`Date ${j + 1}:`, $(el).text().trim());
+    });
+  });
+
+  console.log('\nParsing exhibitions...');
+  $('article, .article, .exhibition, .event, .item').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
-    const titleElement = $el.find('h3 a');
+    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a');
     const title = titleElement.text().trim();
     const link = titleElement.attr('href') || '';
 
     // 会期
-    const periodElement = $el.find('.period');
+    const periodElement = $el.find('.date, .period, .schedule, time');
     const period = periodElement.text().trim();
 
     // 画像
@@ -58,7 +84,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     const imageUrl = imageElement.attr('src') || '';
 
     // 会場
-    const venueElement = $el.find('.venue');
+    const venueElement = $el.find('.venue, .location, .place');
     const venue = venueElement.text().trim();
 
     console.log('\nFound exhibition:', title);
