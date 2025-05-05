@@ -45,12 +45,19 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run check
-        run: npm start
+        run: |
+          echo "Starting exhibition check..."
+          npm start
+          echo "Exhibition check completed."
 
       - name: Commit and push changes
         if: success()
         run: |
+          echo "Pulling latest changes..."
           git pull --rebase origin main
+          echo "Adding changes..."
           git add .
+          echo "Committing changes..."
           git commit -m "Update exhibition data" || exit 0
+          echo "Pushing changes..."
           git push origin main 
