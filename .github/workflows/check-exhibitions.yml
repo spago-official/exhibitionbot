@@ -47,7 +47,11 @@ jobs:
       - name: Run check
         run: |
           echo "Starting exhibition check..."
-          npm start
+          set -e
+          npm start || {
+            echo "Error: npm start failed"
+            exit 1
+          }
           echo "Exhibition check completed."
 
       - name: Commit and push changes
