@@ -65,9 +65,13 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
   // スライダー要素を確認
   console.log('\nSlider elements:');
-  $('.slider_image, .slider_body_inner, .slider_wrapper').each((i, el) => {
+  $('.slider_image, .slider_body_inner, .slider_wrapper, .slick_slide_list').each((i, el) => {
     console.log(`Slider ${i + 1}:`, $(el).attr('class'));
-    console.log('Content:', $(el).html()?.substring(0, 200));
+    const content = $(el).html();
+    if (content) {
+      console.log('Content length:', content.length);
+      console.log('Content preview:', content.substring(0, 500));
+    }
   });
 
   // すべてのdiv要素を確認
@@ -78,20 +82,28 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
       console.log(`Div ${i + 1} classes:`, classes);
       // 展示情報を含む可能性のある要素の内容を確認
       if (classes.includes('exhibition') || classes.includes('event') || classes.includes('slider')) {
-        console.log('Content:', $(div).html()?.substring(0, 200));
+        const content = $(div).html();
+        if (content) {
+          console.log('Content length:', content.length);
+          console.log('Content preview:', content.substring(0, 500));
+        }
       }
     }
   });
 
   // 展示情報を含む可能性のある要素を探す
-  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner');
+  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner, .slick_slide_list');
   console.log('\nPossible exhibition containers found:', possibleContainers.length);
 
   // 各コンテナの構造を確認
   possibleContainers.each((i, container) => {
     console.log(`\nContainer ${i + 1}:`);
     console.log('Classes:', $(container).attr('class'));
-    console.log('HTML:', $(container).html()?.substring(0, 200) + '...');
+    const content = $(container).html();
+    if (content) {
+      console.log('Content length:', content.length);
+      console.log('Content preview:', content.substring(0, 500));
+    }
     
     // タイトル要素を探す
     const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a, .slider_ttl');
@@ -100,6 +112,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
       const text = $(el).text().trim();
       if (text && text !== 'open calendar') {  // カレンダー関連のテキストを除外
         console.log(`Title ${j + 1}:`, text);
+        console.log('Title element HTML:', $(el).html());
       }
     });
 
@@ -108,11 +121,12 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     console.log('Date elements found:', dateElements.length);
     dateElements.each((j, el) => {
       console.log(`Date ${j + 1}:`, $(el).text().trim());
+      console.log('Date element HTML:', $(el).html());
     });
   });
 
   console.log('\nParsing exhibitions...');
-  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner').each((_: number, element: cheerio.Element) => {
+  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner, .slick_slide_list').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
