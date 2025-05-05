@@ -73,8 +73,10 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     // 画像
     const imageElement = $el.find('.exhibition_img img');
     const relativeImageUrl = imageElement.attr('data-pagespeed-lazy-src') || imageElement.attr('src') || '';
-    // pagespeedのパラメータを削除
-    const cleanImageUrl = relativeImageUrl.replace(/\.pagespeed\.[^.]+\./, '.');
+    // pagespeedのパラメータを削除し、相対パスを絶対パスに変換
+    const cleanImageUrl = relativeImageUrl
+      .replace(/\.pagespeed\.[^.]+\./, '.')
+      .replace(/\.webp$/, '.jpg');
     const imageUrl = cleanImageUrl.startsWith('http') ? cleanImageUrl : `${baseUrl}${cleanImageUrl}`;
 
     console.log('\nFound exhibition:', title);

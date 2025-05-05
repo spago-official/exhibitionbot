@@ -9,6 +9,7 @@ config();
 interface SentHistory {
   exhibitions: {
     title: string;
+    venue: string;
     startDate: string;
     endDate: string;
   }[];
@@ -29,9 +30,12 @@ const saveHistory = async (history: SentHistory): Promise<void> => {
   await writeFile(HISTORY_FILE, JSON.stringify(history, null, 2));
 };
 
-const isDuplicate = (exhibition: { title: string; startDate: string; endDate: string }, history: SentHistory): boolean => {
+const isDuplicate = (exhibition: { title: string; venue: string; startDate: string; endDate: string }, history: SentHistory): boolean => {
   return history.exhibitions.some(
-    h => h.title === exhibition.title && h.startDate === exhibition.startDate && h.endDate === exhibition.endDate
+    h => h.title === exhibition.title && 
+         h.venue === exhibition.venue && 
+         h.startDate === exhibition.startDate && 
+         h.endDate === exhibition.endDate
   );
 };
 
@@ -60,6 +64,7 @@ const main = async () => {
     // 履歴の更新
     history.exhibitions.push(...newExhibitions.map(e => ({
       title: e.title,
+      venue: e.venue,
       startDate: e.startDate,
       endDate: e.endDate
     })));
