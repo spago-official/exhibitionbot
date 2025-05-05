@@ -98,8 +98,8 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
     // 直近30日以内の展示のみ抽出
     const now = dayjs();
-    if (end.isBefore(now) || start.isAfter(now.add(30, 'day'))) {
-      console.log('Exhibition is outside the 30-day window');
+    if (end.isBefore(now)) {
+      console.log('Exhibition has already ended');
       return;
     }
 
