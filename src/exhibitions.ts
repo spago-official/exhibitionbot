@@ -44,12 +44,13 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   console.log('Response status:', response.status);
 
   const $ = cheerio.load(response.data);
-  const exhibitions: Exhibition[] = [];
+  const uniqueExhibitions = new Map<string, Exhibition>();
 
   // ベースURLを取得
   const baseUrl = new URL(url).origin;
 
   console.log('\nParsing exhibitions...');
+  
   $('.wrap_exhibition').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
@@ -130,7 +131,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
       return;
     }
 
-    exhibitions.push({
+    const exhibition: Exhibition = {
       title,
       period,
       startDate: start.format('YYYY-MM-DD'),
@@ -138,9 +139,14 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
       imageUrl,
       link,
       venue
-    });
+    };
+
+    // タイトルと会場の組み合わせでユニークなキーを生成
+    const key = `${title}|${venue}`;
+    uniqueExhibitions.set(key, exhibition);
   });
 
+  const exhibitions = Array.from(uniqueExhibitions.values());
   console.log('\nTotal exhibitions found:', exhibitions.length);
   return exhibitions;
 }; 
