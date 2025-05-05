@@ -44,6 +44,10 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Create sent_history.json
+        run: |
+          echo '{"exhibitions":[]}' > sent_history.json
+
       - name: Run check
         run: |
           echo "Starting exhibition check..."
