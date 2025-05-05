@@ -11,6 +11,12 @@ on:
 jobs:
   check-exhibitions:
     runs-on: ubuntu-latest
+    env:
+      LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+      LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+      LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+      TOKYO_EXHIB_URL: ${{ secrets.TOKYO_EXHIB_URL }}
+      MAX_ITEMS: ${{ secrets.MAX_ITEMS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
