@@ -38,28 +38,39 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   // HTMLの構造を詳細に分析
   console.log('\nAnalyzing HTML structure...');
   
-  // メインコンテンツエリアを探す
-  const mainContent = $('main, #main, .main, .content');
-  console.log('Main content elements found:', mainContent.length);
+  // ページ全体の構造を確認
+  console.log('\nPage structure:');
+  console.log('Body classes:', $('body').attr('class'));
+  console.log('Main content area:', $('main, #main, .main, .content').length);
   
+  // すべてのdiv要素を確認
+  console.log('\nAll div elements:');
+  $('div').each((i, div) => {
+    const classes = $(div).attr('class');
+    if (classes) {
+      console.log(`Div ${i + 1} classes:`, classes);
+    }
+  });
+
   // 展示情報を含む可能性のある要素を探す
-  const possibleContainers = $('article, .article, .exhibition, .event, .item');
-  console.log('Possible exhibition containers found:', possibleContainers.length);
+  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item');
+  console.log('\nPossible exhibition containers found:', possibleContainers.length);
 
   // 各コンテナの構造を確認
   possibleContainers.each((i, container) => {
     console.log(`\nContainer ${i + 1}:`);
+    console.log('Classes:', $(container).attr('class'));
     console.log('HTML:', $(container).html()?.substring(0, 200) + '...');
     
     // タイトル要素を探す
-    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name');
+    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a');
     console.log('Title elements found:', titleElements.length);
     titleElements.each((j, el) => {
       console.log(`Title ${j + 1}:`, $(el).text().trim());
     });
 
     // 日付要素を探す
-    const dateElements = $(container).find('.date, .period, .schedule, time');
+    const dateElements = $(container).find('.date, .period, .schedule, time, .term');
     console.log('Date elements found:', dateElements.length);
     dateElements.each((j, el) => {
       console.log(`Date ${j + 1}:`, $(el).text().trim());
@@ -67,16 +78,16 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   });
 
   console.log('\nParsing exhibitions...');
-  $('article, .article, .exhibition, .event, .item').each((_: number, element: cheerio.Element) => {
+  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
-    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a');
+    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a, a');
     const title = titleElement.text().trim();
     const link = titleElement.attr('href') || '';
 
     // 会期
-    const periodElement = $el.find('.date, .period, .schedule, time');
+    const periodElement = $el.find('.date, .period, .schedule, time, .term');
     const period = periodElement.text().trim();
 
     // 画像
