@@ -56,10 +56,18 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   console.log('Body classes:', $('body').attr('class'));
   
   // メインコンテンツエリアを探す
-  const mainContent = $('main, #main, .main, .content, #content, .container');
+  const mainContent = $('main, #main, .main, .content, #content, .container, .slider_body_inner');
   console.log('\nMain content areas found:', mainContent.length);
   mainContent.each((i, el) => {
     console.log(`Main content ${i + 1} classes:`, $(el).attr('class'));
+    console.log('Content preview:', $(el).text().substring(0, 100));
+  });
+
+  // スライダー要素を確認
+  console.log('\nSlider elements:');
+  $('.slider_image, .slider_body_inner, .slider_wrapper').each((i, el) => {
+    console.log(`Slider ${i + 1}:`, $(el).attr('class'));
+    console.log('Content:', $(el).html()?.substring(0, 200));
   });
 
   // すべてのdiv要素を確認
@@ -68,11 +76,15 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     const classes = $(div).attr('class');
     if (classes && !classes.includes('search_event_inner')) {  // 検索フォームを除外
       console.log(`Div ${i + 1} classes:`, classes);
+      // 展示情報を含む可能性のある要素の内容を確認
+      if (classes.includes('exhibition') || classes.includes('event') || classes.includes('slider')) {
+        console.log('Content:', $(div).html()?.substring(0, 200));
+      }
     }
   });
 
   // 展示情報を含む可能性のある要素を探す
-  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item');
+  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner');
   console.log('\nPossible exhibition containers found:', possibleContainers.length);
 
   // 各コンテナの構造を確認
@@ -82,7 +94,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     console.log('HTML:', $(container).html()?.substring(0, 200) + '...');
     
     // タイトル要素を探す
-    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a');
+    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a, .slider_ttl');
     console.log('Title elements found:', titleElements.length);
     titleElements.each((j, el) => {
       const text = $(el).text().trim();
@@ -100,11 +112,11 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   });
 
   console.log('\nParsing exhibitions...');
-  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item').each((_: number, element: cheerio.Element) => {
+  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
-    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a, a');
+    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a, a, .slider_ttl');
     const title = titleElement.text().trim();
     const link = titleElement.attr('href') || '';
 
