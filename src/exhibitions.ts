@@ -29,8 +29,20 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   if (!url) throw new Error('TOKYO_EXHIB_URL is not set');
 
   console.log('Fetching exhibitions from:', url);
-  const response = await axios.get(url);
+  
+  // ヘッダーを追加してブラウザからのリクエストのように見せる
+  const response = await axios.get(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  });
+  
   console.log('Response status:', response.status);
+  console.log('Response headers:', response.headers);
 
   const $ = cheerio.load(response.data);
   const exhibitions: Exhibition[] = [];
@@ -40,20 +52,27 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   
   // ページ全体の構造を確認
   console.log('\nPage structure:');
+  console.log('Title:', $('title').text());
   console.log('Body classes:', $('body').attr('class'));
-  console.log('Main content area:', $('main, #main, .main, .content').length);
   
+  // メインコンテンツエリアを探す
+  const mainContent = $('main, #main, .main, .content, #content, .container');
+  console.log('\nMain content areas found:', mainContent.length);
+  mainContent.each((i, el) => {
+    console.log(`Main content ${i + 1} classes:`, $(el).attr('class'));
+  });
+
   // すべてのdiv要素を確認
-  console.log('\nAll div elements:');
-  $('div').each((i, div) => {
+  console.log('\nAll div elements with classes:');
+  $('div[class]').each((i, div) => {
     const classes = $(div).attr('class');
-    if (classes) {
+    if (classes && !classes.includes('search_event_inner')) {  // 検索フォームを除外
       console.log(`Div ${i + 1} classes:`, classes);
     }
   });
 
   // 展示情報を含む可能性のある要素を探す
-  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item');
+  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item');
   console.log('\nPossible exhibition containers found:', possibleContainers.length);
 
   // 各コンテナの構造を確認
@@ -66,11 +85,14 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a');
     console.log('Title elements found:', titleElements.length);
     titleElements.each((j, el) => {
-      console.log(`Title ${j + 1}:`, $(el).text().trim());
+      const text = $(el).text().trim();
+      if (text && text !== 'open calendar') {  // カレンダー関連のテキストを除外
+        console.log(`Title ${j + 1}:`, text);
+      }
     });
 
     // 日付要素を探す
-    const dateElements = $(container).find('.date, .period, .schedule, time, .term');
+    const dateElements = $(container).find('.date, .period, .schedule, time, .term, .event_date');
     console.log('Date elements found:', dateElements.length);
     dateElements.each((j, el) => {
       console.log(`Date ${j + 1}:`, $(el).text().trim());
@@ -78,7 +100,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   });
 
   console.log('\nParsing exhibitions...');
-  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item').each((_: number, element: cheerio.Element) => {
+  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
@@ -87,7 +109,7 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
     const link = titleElement.attr('href') || '';
 
     // 会期
-    const periodElement = $el.find('.date, .period, .schedule, time, .term');
+    const periodElement = $el.find('.date, .period, .schedule, time, .term, .event_date');
     const period = periodElement.text().trim();
 
     // 画像
