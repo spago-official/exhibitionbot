@@ -1,120 +1,134 @@
-import { Client, FlexMessage } from '@line/bot-sdk';
-import type { Exhibition } from './exhibitions.js';
+import { Client, FlexMessage, TextMessage, FlexBubble } from '@line/bot-sdk';
+import { Exhibition } from './exhibitions.js';
 
 const client = new Client({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
   channelSecret: process.env.LINE_CHANNEL_SECRET || ''
 });
 
-const createExhibitionBubble = (exhibition: Exhibition) => ({
-  type: 'bubble' as const,
-  hero: {
-    type: 'image' as const,
-    url: exhibition.imageUrl,
-    size: 'full' as const,
-    aspectRatio: '20:13',
-    aspectMode: 'cover' as const
-  },
-  body: {
-    type: 'box' as const,
-    layout: 'vertical' as const,
-    contents: [
-      {
-        type: 'text' as const,
-        text: exhibition.title,
-        weight: 'bold' as const,
-        size: 'xl' as const,
-        wrap: true
-      },
-      {
-        type: 'box' as const,
-        layout: 'vertical' as const,
-        margin: 'lg',
-        spacing: 'sm',
-        contents: [
-          {
-            type: 'box' as const,
-            layout: 'baseline' as const,
-            spacing: 'sm',
-            contents: [
-              {
-                type: 'text' as const,
-                text: '会期',
-                color: '#aaaaaa',
-                size: 'sm' as const,
-                flex: 1
-              },
-              {
-                type: 'text' as const,
-                text: exhibition.period,
-                wrap: true,
-                color: '#666666',
-                size: 'sm' as const,
-                flex: 4
-              }
-            ]
-          },
-          {
-            type: 'box' as const,
-            layout: 'baseline' as const,
-            spacing: 'sm',
-            contents: [
-              {
-                type: 'text' as const,
-                text: '会場',
-                color: '#aaaaaa',
-                size: 'sm' as const,
-                flex: 1
-              },
-              {
-                type: 'text' as const,
-                text: exhibition.venue,
-                wrap: true,
-                color: '#666666',
-                size: 'sm' as const,
-                flex: 4
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  footer: {
-    type: 'box' as const,
-    layout: 'vertical' as const,
-    spacing: 'sm',
-    contents: [
-      {
-        type: 'button' as const,
-        style: 'link' as const,
-        height: 'sm' as const,
-        action: {
-          type: 'uri' as const,
-          label: '詳細を見る',
-          uri: exhibition.link
-        }
-      }
-    ],
-    flex: 0
-  }
-});
+const LINE_USER_ID = process.env.LINE_USER_ID;
 
 export const sendExhibitions = async (exhibitions: Exhibition[]): Promise<void> => {
-  const userId = process.env.LINE_USER_ID;
-  if (!userId) throw new Error('LINE_USER_ID is not set');
+  if (!LINE_USER_ID) {
+    throw new Error('LINE_USER_ID is not set');
+  }
 
-  const maxItems = parseInt(process.env.MAX_ITEMS || '6', 10);
-  const limitedExhibitions = exhibitions.slice(0, maxItems);
+  for (const exhibition of exhibitions) {
+    const message: FlexMessage = {
+      type: 'flex',
+      altText: `新しい展示会情報: ${exhibition.title}`,
+      contents: createExhibitionBubble(exhibition)
+    };
 
-  const message: FlexMessage = {
-    type: 'flex',
-    altText: '美術展情報',
-    contents: {
-      type: 'carousel',
-      contents: limitedExhibitions.map(createExhibitionBubble)
-    }
+    await client.pushMessage(LINE_USER_ID, message);
+  }
+};
+
+export const sendNoExhibitionsMessage = async (): Promise<void> => {
+  if (!LINE_USER_ID) {
+    throw new Error('LINE_USER_ID is not set');
+  }
+
+  const message: TextMessage = {
+    type: 'text',
+    text: '現在、新しい展示会情報はありません。\n次回の更新をお待ちください。'
   };
 
-  await client.pushMessage(userId, message);
+  await client.pushMessage(LINE_USER_ID, message);
+};
+
+const createExhibitionBubble = (exhibition: Exhibition): FlexBubble => {
+  return {
+    type: 'bubble',
+    hero: {
+      type: 'image',
+      url: exhibition.imageUrl,
+      size: 'full',
+      aspectRatio: '20:13',
+      aspectMode: 'cover'
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'text',
+          text: exhibition.title,
+          weight: 'bold',
+          size: 'xl',
+          wrap: true
+        },
+        {
+          type: 'box',
+          layout: 'vertical',
+          margin: 'lg',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'box',
+              layout: 'baseline',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'text',
+                  text: '会場',
+                  color: '#aaaaaa',
+                  size: 'sm',
+                  flex: 1
+                },
+                {
+                  type: 'text',
+                  text: exhibition.venue,
+                  wrap: true,
+                  color: '#666666',
+                  size: 'sm',
+                  flex: 5
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'text',
+                  text: '会期',
+                  color: '#aaaaaa',
+                  size: 'sm',
+                  flex: 1
+                },
+                {
+                  type: 'text',
+                  text: exhibition.period,
+                  wrap: true,
+                  color: '#666666',
+                  size: 'sm',
+                  flex: 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'button',
+          style: 'link',
+          height: 'sm',
+          action: {
+            type: 'uri',
+            label: '詳細を見る',
+            uri: exhibition.link
+          }
+        }
+      ],
+      flex: 0
+    }
+  };
 }; 

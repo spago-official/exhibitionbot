@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { fetchExhibitions } from './exhibitions.js';
-import { sendExhibitions } from './line.js';
+import { sendExhibitions, sendNoExhibitionsMessage } from './line.js';
 
 config();
 
@@ -45,6 +45,7 @@ const main = async () => {
     const exhibitions = await fetchExhibitions();
     if (exhibitions.length === 0) {
       console.log('No new exhibitions found');
+      await sendNoExhibitionsMessage();
       return;
     }
 
@@ -55,6 +56,7 @@ const main = async () => {
     const newExhibitions = exhibitions.filter(e => !isDuplicate(e, history));
     if (newExhibitions.length === 0) {
       console.log('No new exhibitions to send');
+      await sendNoExhibitionsMessage();
       return;
     }
 
