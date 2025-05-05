@@ -89,13 +89,34 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
     // 日付の解析
     const [startDate, endDate] = period.split('～').map((d: string) => d.trim());
-    const start = dayjs(startDate, 'YYYY年MM月DD日', 'ja');
-    const end = dayjs(endDate, 'YYYY年MM月DD日', 'ja');
+    console.log('Raw start date:', startDate);
+    console.log('Raw end date:', endDate);
 
-    if (!start.isValid() || !end.isValid()) {
+    // 日付文字列を整形
+    const formatDate = (dateStr: string) => {
+      const match = dateStr.match(/(\d+)年(\d+)月(\d+)日/);
+      if (!match) return null;
+      const [_, year, month, day] = match;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    };
+
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+
+    if (!formattedStartDate || !formattedEndDate) {
       console.log('Skipping: Invalid date format');
       console.log('Start date:', startDate);
       console.log('End date:', endDate);
+      return;
+    }
+
+    const start = dayjs(formattedStartDate);
+    const end = dayjs(formattedEndDate);
+
+    if (!start.isValid() || !end.isValid()) {
+      console.log('Skipping: Invalid date format');
+      console.log('Formatted start date:', formattedStartDate);
+      console.log('Formatted end date:', formattedEndDate);
       return;
     }
 
