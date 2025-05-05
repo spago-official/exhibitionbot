@@ -45,9 +45,13 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global advice.skippedCherryPicks false
 
-      - name: Create sent_history.json
+      - name: Create or update sent_history.json
         run: |
-          echo '{"exhibitions":[]}' > sent_history.json
+          if [ ! -f sent_history.json ]; then
+            echo '{"exhibitions":[]}' > sent_history.json
+            git add sent_history.json
+            git commit -m "Initialize sent_history.json" || true
+          fi
 
       - name: Run check
         run: |
