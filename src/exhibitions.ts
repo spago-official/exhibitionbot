@@ -46,6 +46,9 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   const $ = cheerio.load(response.data);
   const exhibitions: Exhibition[] = [];
 
+  // ベースURLを取得
+  const baseUrl = new URL(url).origin;
+
   console.log('\nParsing exhibitions...');
   $('.wrap_exhibition').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
@@ -68,7 +71,10 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
     // 画像
     const imageElement = $el.find('.exhibition_img img');
-    const imageUrl = imageElement.attr('data-pagespeed-lazy-src') || imageElement.attr('src') || '';
+    const relativeImageUrl = imageElement.attr('data-pagespeed-lazy-src') || imageElement.attr('src') || '';
+    // pagespeedのパラメータを削除
+    const cleanImageUrl = relativeImageUrl.replace(/\.pagespeed\.[^.]+\./, '.');
+    const imageUrl = cleanImageUrl.startsWith('http') ? cleanImageUrl : `${baseUrl}${cleanImageUrl}`;
 
     console.log('\nFound exhibition:', title);
     console.log('Period:', period);
