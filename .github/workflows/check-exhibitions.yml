@@ -1,0 +1,28 @@
+name: Check Exhibitions
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 10 * * 1'  # 毎週月曜日の10:00に実行
+
+jobs:
+  check-exhibitions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run build
+      - run: npm start
+      - name: Configure Git
+        run: git config --local user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Commit and push if changed
+        run: |
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update exhibition history" && git push) 
