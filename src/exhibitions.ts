@@ -42,109 +42,33 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   });
   
   console.log('Response status:', response.status);
-  console.log('Response headers:', response.headers);
 
   const $ = cheerio.load(response.data);
   const exhibitions: Exhibition[] = [];
 
-  // HTMLの構造を詳細に分析
-  console.log('\nAnalyzing HTML structure...');
-  
-  // ページ全体の構造を確認
-  console.log('\nPage structure:');
-  console.log('Title:', $('title').text());
-  console.log('Body classes:', $('body').attr('class'));
-  
-  // メインコンテンツエリアを探す
-  const mainContent = $('main, #main, .main, .content, #content, .container, .slider_body_inner');
-  console.log('\nMain content areas found:', mainContent.length);
-  mainContent.each((i, el) => {
-    console.log(`Main content ${i + 1} classes:`, $(el).attr('class'));
-    console.log('Content preview:', $(el).text().substring(0, 100));
-  });
-
-  // スライダー要素を確認
-  console.log('\nSlider elements:');
-  $('.slider_image, .slider_body_inner, .slider_wrapper, .slick_slide_list').each((i, el) => {
-    console.log(`Slider ${i + 1}:`, $(el).attr('class'));
-    const content = $(el).html();
-    if (content) {
-      console.log('Content length:', content.length);
-      console.log('Content preview:', content.substring(0, 500));
-    }
-  });
-
-  // すべてのdiv要素を確認
-  console.log('\nAll div elements with classes:');
-  $('div[class]').each((i, div) => {
-    const classes = $(div).attr('class');
-    if (classes && !classes.includes('search_event_inner')) {  // 検索フォームを除外
-      console.log(`Div ${i + 1} classes:`, classes);
-      // 展示情報を含む可能性のある要素の内容を確認
-      if (classes.includes('exhibition') || classes.includes('event') || classes.includes('slider')) {
-        const content = $(div).html();
-        if (content) {
-          console.log('Content length:', content.length);
-          console.log('Content preview:', content.substring(0, 500));
-        }
-      }
-    }
-  });
-
-  // 展示情報を含む可能性のある要素を探す
-  const possibleContainers = $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner, .slick_slide_list');
-  console.log('\nPossible exhibition containers found:', possibleContainers.length);
-
-  // 各コンテナの構造を確認
-  possibleContainers.each((i, container) => {
-    console.log(`\nContainer ${i + 1}:`);
-    console.log('Classes:', $(container).attr('class'));
-    const content = $(container).html();
-    if (content) {
-      console.log('Content length:', content.length);
-      console.log('Content preview:', content.substring(0, 500));
-    }
-    
-    // タイトル要素を探す
-    const titleElements = $(container).find('h1, h2, h3, h4, .title, .name, a, .slider_ttl');
-    console.log('Title elements found:', titleElements.length);
-    titleElements.each((j, el) => {
-      const text = $(el).text().trim();
-      if (text && text !== 'open calendar') {  // カレンダー関連のテキストを除外
-        console.log(`Title ${j + 1}:`, text);
-        console.log('Title element HTML:', $(el).html());
-      }
-    });
-
-    // 日付要素を探す
-    const dateElements = $(container).find('.date, .period, .schedule, time, .term, .event_date');
-    console.log('Date elements found:', dateElements.length);
-    dateElements.each((j, el) => {
-      console.log(`Date ${j + 1}:`, $(el).text().trim());
-      console.log('Date element HTML:', $(el).html());
-    });
-  });
-
   console.log('\nParsing exhibitions...');
-  $('article, .article, .exhibition, .event, .item, .list_item, .exhibition_item, .event_item, .slider_image, .slider_body_inner, .slick_slide_list').each((_: number, element: cheerio.Element) => {
+  $('.wrap_exhibition').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
     
     // タイトルとリンク
-    const titleElement = $el.find('h1 a, h2 a, h3 a, h4 a, .title a, .name a, a, .slider_ttl');
+    const titleElement = $el.find('.exhibition_ttl .ttl');
     const title = titleElement.text().trim();
-    const link = titleElement.attr('href') || '';
+    const link = titleElement.attr('data-link') || '';
+
+    // 会場
+    const venueElement = $el.find('.exhibition_cnt .facility');
+    const venue = venueElement.text().trim();
 
     // 会期
-    const periodElement = $el.find('.date, .period, .schedule, time, .term, .event_date');
+    const periodElement = $el.find('.exhibition_cnt p').filter((_, el) => {
+      const text = $(el).text().trim();
+      return text.includes('年') && text.includes('月') && text.includes('日');
+    });
     const period = periodElement.text().trim();
 
     // 画像
-    const imageElement = $el.find('img');
-    const imageUrl = imageElement.attr('src') || '';
-
-    // 会場
-    const venueElement = $el.find('.venue, .location, .place');
-    const venue = venueElement.text().trim();
+    const imageElement = $el.find('.exhibition_img img');
+    const imageUrl = imageElement.attr('data-pagespeed-lazy-src') || imageElement.attr('src') || '';
 
     console.log('\nFound exhibition:', title);
     console.log('Period:', period);
@@ -159,8 +83,8 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
     // 日付の解析
     const [startDate, endDate] = period.split('～').map((d: string) => d.trim());
-    const start = dayjs(startDate, 'YYYY.MM.DD');
-    const end = dayjs(endDate, 'YYYY.MM.DD');
+    const start = dayjs(startDate, 'YYYY年MM月DD日');
+    const end = dayjs(endDate, 'YYYY年MM月DD日');
 
     if (!start.isValid() || !end.isValid()) {
       console.log('Skipping: Invalid date format');
