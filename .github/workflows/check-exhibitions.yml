@@ -43,6 +43,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global advice.skippedCherryPicks false
 
       - name: Create sent_history.json
         run: |
@@ -66,6 +67,6 @@ jobs:
           echo "Committing changes..."
           git commit -m "Update exhibition data" || exit 0
           echo "Pulling latest changes..."
-          git pull --rebase origin main || true
+          git pull --rebase origin main --reapply-cherry-picks || true
           echo "Pushing changes..."
           git push origin main 
