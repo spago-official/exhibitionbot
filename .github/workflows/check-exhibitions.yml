@@ -47,21 +47,33 @@ jobs:
 
       - name: Create or update sent_history.json
         run: |
+          echo "Checking sent_history.json..."
           if [ ! -f sent_history.json ]; then
+            echo "Creating sent_history.json..."
             echo '{"exhibitions":[]}' > sent_history.json
             git add sent_history.json
             git commit -m "Initialize sent_history.json" || true
+          else
+            echo "sent_history.json already exists"
+            cat sent_history.json
           fi
 
       - name: Run check
         run: |
           echo "Starting exhibition check..."
-          set -e
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Running npm start..."
+          set -x
           NODE_OPTIONS='--experimental-specifier-resolution=node' npm start || {
             echo "Error: npm start failed"
             exit 1
           }
+          set +x
           echo "Exhibition check completed."
+          echo "Updated sent_history.json contents:"
+          cat sent_history.json
 
       - name: Commit and push changes
         if: success()
