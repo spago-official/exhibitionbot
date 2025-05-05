@@ -83,11 +83,13 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
 
     // 日付の解析
     const [startDate, endDate] = period.split('～').map((d: string) => d.trim());
-    const start = dayjs(startDate, 'YYYY年MM月DD日');
-    const end = dayjs(endDate, 'YYYY年MM月DD日');
+    const start = dayjs(startDate, 'YYYY年MM月DD日', 'ja');
+    const end = dayjs(endDate, 'YYYY年MM月DD日', 'ja');
 
     if (!start.isValid() || !end.isValid()) {
       console.log('Skipping: Invalid date format');
+      console.log('Start date:', startDate);
+      console.log('End date:', endDate);
       return;
     }
 
