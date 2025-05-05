@@ -35,21 +35,52 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
   const $ = cheerio.load(response.data);
   const exhibitions: Exhibition[] = [];
 
+  // HTMLの構造を確認
+  console.log('\nChecking HTML structure...');
+  const articleElements = $('article');
+  console.log('Found article elements:', articleElements.length);
+
   console.log('Parsing exhibitions...');
-  $('.exhibition-item').each((_: number, element: cheerio.Element) => {
+  $('article').each((_: number, element: cheerio.Element) => {
     const $el = $(element);
-    const title = $el.find('.title').text().trim();
-    const period = $el.find('.period').text().trim();
-    const imageUrl = $el.find('img').attr('src') || '';
-    const venue = $el.find('.venue').text().trim();
+    
+    // タイトルとリンク
+    const titleElement = $el.find('h3 a');
+    const title = titleElement.text().trim();
+    const link = titleElement.attr('href') || '';
+
+    // 会期
+    const periodElement = $el.find('.period');
+    const period = periodElement.text().trim();
+
+    // 画像
+    const imageElement = $el.find('img');
+    const imageUrl = imageElement.attr('src') || '';
+
+    // 会場
+    const venueElement = $el.find('.venue');
+    const venue = venueElement.text().trim();
 
     console.log('\nFound exhibition:', title);
     console.log('Period:', period);
+    console.log('Venue:', venue);
+    console.log('Image URL:', imageUrl);
+    console.log('Link:', link);
+
+    if (!period) {
+      console.log('Skipping: No period found');
+      return;
+    }
 
     // 日付の解析
     const [startDate, endDate] = period.split('～').map((d: string) => d.trim());
     const start = dayjs(startDate, 'YYYY.MM.DD');
     const end = dayjs(endDate, 'YYYY.MM.DD');
+
+    if (!start.isValid() || !end.isValid()) {
+      console.log('Skipping: Invalid date format');
+      return;
+    }
 
     console.log('Start date:', start.format('YYYY-MM-DD'));
     console.log('End date:', end.format('YYYY-MM-DD'));
@@ -61,23 +92,13 @@ export const fetchExhibitions = async (): Promise<Exhibition[]> => {
       return;
     }
 
-    // リンクの収集と優先順位付け
-    const links: string[] = [];
-    $el.find('a').each((_: number, a: cheerio.Element) => {
-      const href = $(a).attr('href');
-      if (href) links.push(href);
-    });
-
-    const selectedLink = pickLink(links);
-    console.log('Selected link:', selectedLink);
-
     exhibitions.push({
       title,
       period,
       startDate: start.format('YYYY-MM-DD'),
       endDate: end.format('YYYY-MM-DD'),
       imageUrl,
-      link: selectedLink,
+      link,
       venue
     });
   });
