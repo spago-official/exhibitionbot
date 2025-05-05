@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "Starting exhibition check..."
           set -e
-          npm start || {
+          NODE_OPTIONS='--experimental-specifier-resolution=node' npm start || {
             echo "Error: npm start failed"
             exit 1
           }
